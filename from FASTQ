@@ -1,1 +1,23 @@
-https://github.com/hs763/Demixing.git
+singularity shell --bind $PWD:/mnt luca_r_env.sif
+cd /mnt
+
+#human FASTQ file 
+wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz
+
+#chimp FASTQ file 
+wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN027_Sandra_6k_120d_1_S3_L005_R1_001.fastq.gz 
+
+#getting genome FASTQs
+ftp hgdownload.cse.ucsc.edu
+cd goldenPath/hg38/bigZips
+mget hg38.fa.gz
+
+cd goldenPath/panTro6/bigZips
+mget panTro6.fa.gz
+
+gunzip KAN027_Sandra_6k_120d_1_S3_L005_R1_001.fastq.gz Sandra_120d_org1.fastq
+gunzip KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz H9_128d_org1.fastq
+
+gunzip panTro6.fa.gz
+gunzip hg38.fa.gz
+
