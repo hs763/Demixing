@@ -1,11 +1,27 @@
 singularity shell --bind $PWD:/mnt luca_r_env.sif
 cd /mnt
 
+cd /cephfs2/hannas/demixing/data/reads
+
 #human FASTQ file 
 wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN030_H9_6k_128d_S6_L008_R2_001.fastq.gz
+wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN030_H9_6k_128d_S6_L008_I1_001.fastq.gz
+wget https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-7552/sdrf
 
 #chimp FASTQ file 
 wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN027_Sandra_6k_120d_1_S3_L005_R1_001.fastq.gz 
+wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN027_Sandra_6k_120d_1_S3_L005_R2_001.fastq.gz 
+wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN027_Sandra_6k_120d_1_S3_L005_I1_001.fastq.gz 
+wget https://www.ebi.ac.uk/biostudies/arrayexpress/studies/E-MTAB-7552/sdrf
+
+gunzip KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz H9_128d_org1.fastq
+gunzip KAN030_H9_6k_128d_S6_L008_R2_001.fastq.gz 
+gunzip KAN030_H9_6k_128d_S6_L008_I1_001.fastq.gz
+
+gunzip KAN027_Sandra_6k_120d_1_S3_L005_R1_001.fastq.gz 
+gunzip 
+
 
 #getting genome FASTQs
 ftp hgdownload.cse.ucsc.edu
@@ -15,9 +31,36 @@ mget hg38.fa.gz
 cd goldenPath/panTro6/bigZips
 mget panTro6.fa.gz
 
-gunzip KAN027_Sandra_6k_120d_1_S3_L005_R1_001.fastq.gz Sandra_120d_org1.fastq
-gunzip KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz H9_128d_org1.fastq
-
 gunzip panTro6.fa.gz
 gunzip hg38.fa.gz
+
+#make a folder with FASTQs 
+https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/tutorial_ct
+
+
+
+#making samplesheet.csv
+nano "samplesheet.csv"
+
+#makign reference genome
+#from Ensembl database wget the FASTQ files with primary_assembly and GFT file
+#filter only portein coding genes to prevent mutiple mapping. 
+cellranger mkgtf \
+  Homo_sapiens.GRCh38.110.gtf \
+  Homo_sapiens.GRCh38.110.filtered.gtf \
+  --attribute=gene_biotype:protein_coding
+
+#make the genome reference 
+cellranger mkref \
+  --genome=Homo.sapiens_genome \
+  --fasta=Homo_sapiens.GRCh38.dna_sm.primary_assembly.fa \
+  --genes=Homo_sapiens.GRCh38.110.filtered.gtf
+
+
+
+#demultiplexing FASTQ fiels into cells separatelly for each FASTQ file
+cellranger count --id Human1 --transcriptome /lmb/home/hannas/demixing/data/genome2/refdata-gex-GRCh38-2020-A --fastqs /lmb/home/hannas/demixing/data --sample KAN030_H9_6k_128d 
+   
+    
+
 
