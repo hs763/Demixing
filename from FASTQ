@@ -54,19 +54,123 @@ nohup cellranger count \
     --fastqs=/cephfs2/hannas/demixing/data/reads/Sandra_6k_120d_fastqs \
     --transcriptome=/cephfs2/hannas/demixing/data/genome/GRCh38_and_Pan_tro_3
 
-#reading matricies into r
+#reading human matrix into r
+
+##########################HUMAN FASTQ#######################################
 library(Matrix)
-matrix_dir = "/opt/human_mixed_ref/outs/filtered_feature_bc_matrix/"
+matrix_dir = "/lmb/home/hannas/human_mixed_ref/outs/raw_feature_bc_matrix/"
 barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
 features.path <- paste0(matrix_dir, "features.tsv.gz")
 matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
-mat <- readMM(file = matrix.path)
+human_mat <- readMM(file = matrix.path)
 feature.names = read.delim(features.path,
                            header = FALSE,
                            stringsAsFactors = FALSE)
 barcode.names = read.delim(barcode.path,
                            header = FALSE,
                            stringsAsFactors = FALSE)
-colnames(mat) = barcode.names$V1
-rownames(mat) = feature.names$V1
+colnames(human_mat) = barcode.names$V1
+rownames(human_mat) = feature.names$V1
+
+dim(human_mat)
+#43372 454945
+
+#finding the rows with human genes and chimp genes
+human_mat_row_h <- grep("^GRCh38", rownames(human_mat))
+length(human_mat_row_h) 
+#20070
+
+human_mat_row_ch <- grep("^Pan_tro_3", rownames(human_mat))
+length(human_mat_row_ch) 
+#23302
+
+human_mat_h <- mat[1:20070,]
+dim(human_mat_h)
+#20070 454945
+
+human_mat_ch <- mat[20071:43372,]
+dim(human_mat_ch)
+#23302 454945
+
+#building a matadata 
+#rows = cell_IDs
+metadata <- matrix(NA, nrow = 454945, ncol = 1)
+rownames(metadata) <- colnames(human_mat) 
+
+total_counts <- colSums(human_mat)
+h_counts <- colSums(human_mat_h)
+ch_counts <- colSums(human_mat_ch)
+
+metadata[,1] <- total_counts
+metadata <- cbind(metadata, h_counts, ch_counts)
+colanmes(metadata) <- c("total_counts", "h_counts", "ch_counts") 
+
+#removign cells with zero reads
+empty_cells <- grep(0, metadata[,1])
+length(empty_cells)
+#186309
+
+metadata2 <- metadata
+metadata2 <- metadata2[-c(empty_cells),]
+metadata_human <- metadata2
+write.csv(metadata_human, "metadata_human.csv")
+
+#################CHIMPANZEE FASTQ ###########################################
+matrix_dir = "/lmb/home/hannas/chimp_mixed_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+chimp_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(chimp_mat) = barcode.names$V1
+rownames(chimp_mat) = feature.names$V1
+
+dim(chimp_mat)
+#43372 495782
+
+#finding the rows with human genes and chimp genes
+chimp_mat_row_h <- grep("^GRCh38", rownames(chimp_mat))
+length(chimp_mat_row_h) 
+#20070
+
+chimp_mat_row_ch <- grep("^Pan_tro_3", rownames(chimp_mat))
+length(chimp_mat_row_ch) 
+#23302
+
+chimp_mat_h <- chimp_mat[1:20070,]
+dim(chimp_mat_h)
+#20070 495782
+
+chimp_mat_ch <- chimp_mat[20071:43372,]
+dim(chimp_mat_ch)
+#23302 495782
+
+#building a matadata 
+#rows = cell_IDs
+metadata <- matrix(NA, nrow = 495782, ncol = 1)
+rownames(metadata) <- colnames(chimp_mat) 
+
+total_counts <- colSums(chimp_mat)
+h_counts <- colSums(chimp_mat_h)
+ch_counts <- colSums(chimp_mat_ch)
+
+metadata[,1] <- total_counts
+metadata <- cbind(metadata, h_counts, ch_counts)
+colnames(metadata) <- c("total_counts", "h_counts", "ch_counts") 
+
+#removign cells with zero reads
+empty_cells <- grep(0, metadata[,1])
+length(empty_cells)
+#215282
+
+metadata2 <- metadata
+metadata2 <- metadata2[-c(empty_cells),]
+metadata_chimp <- metadata2
+write.csv(metadata_chimp, "metadata_chimp.csv")
+
 
