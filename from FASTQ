@@ -1,4 +1,5 @@
 singularity shell --bind $PWD:/mnt luca_r_env.sif
+singularity shell --bind $PWD:/cdphfs2/hannas/demixing luca_r_env.sif
 cd /mnt
 
 cd /cephfs2/hannas/demixing/data/reads
@@ -172,5 +173,68 @@ metadata2 <- metadata
 metadata2 <- metadata2[-c(empty_cells),]
 metadata_chimp <- metadata2
 write.csv(metadata_chimp, "metadata_chimp.csv")
+
+metadata_chimp <- read.csv("metadata_chimp.csv")
+metadata_human <- read.csv("metadata_human.csv")
+
+species_ch <- rep("ch", nrow(metadata_chimp))
+species_h <- rep("h", nrow(metadata_human))
+metadata_chimp <- cbind(metadata_chimp, species_ch)
+metadata_human <- cbind(metadata_human, species_h)
+colnames(metadata_chimp) <- c("cell_ID","total_counts", "h_counts", "ch_counts", "original_species")
+colnames(metadata_human) <- c("cell_ID","total_counts", "h_counts", "ch_counts", "original_species")
+
+#merging metadata files
+metadata <- rbind(metadata_human, metadata_chimp)
+
+dim(metadata_human) 
+#268636      5
+dim(metadata_chimp) 
+#280500      5
+dim(metadata) 
+#549136      5
+
+metadata$h_counts_ratio <- metadata$h_counts/metadata$total_counts
+metadata$ch_counts_ratio <- metadata$ch_counts/metadata$total_counts
+
+#predicting the species 
+metadata$predic_species <- rep(NA, nrow(metadata))
+for (i in 1:nrow(metadata)){
+  if (metadata$h_counts_ratio[i] > metadata$ch_counts_ratio[i]) {
+    metadata$predic_species[i] <- "h"
+  }
+  else {
+    metadata$predic_species[i] <- "ch"
+  }
+}
+
+#evaluating the predictions
+mispredictions <- which(metadata$predic_species != metadata$original_species)
+length(mispredictions)
+#45489
+dim(metadata)
+#549136      8
+45489/549136 
+#0.0828374 
+#about 8% of the cells species were mispredicted 
+
+total-counts <- ggplot(data = data.frame(metadata), aes(x = total_counts, fill = group)) +
+  geom_histogram(bins=30) +
+  scale_y_log10() +
+  labs(x = "total_counts", y = "frequency")
+
+#improving the demixing usifn FASTQ Search pipeline 
+#FASTAQ screen is present on cluster
+#aligning the reads agains humna and chimp genomes to find the uniuque reads which are present only in one species 
+cd /cephfs2/hannas/demixing/data/genome
+
+#bowtie2 chimp genome indexing 
+#https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer
+bowtie2-build Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa Pan_tro_3.0
+
+cd /net/nfs1/public/genomics/soft/bin
+emacs fastq_screen.conf
+
+
 
 
