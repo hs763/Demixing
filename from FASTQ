@@ -1,5 +1,5 @@
 singularity shell --bind $PWD:/mnt luca_r_env.sif
-singularity shell --bind $PWD:/cdphfs2/hannas/demixing luca_r_env.sif
+singularity shell --bind /mnt:/cdphfs2/hannas luca_r_env.sif
 cd /mnt
 
 cd /cephfs2/hannas/demixing/data/reads
@@ -218,10 +218,6 @@ dim(metadata)
 #0.0828374 
 #about 8% of the cells species were mispredicted 
 
-total-counts <- ggplot(data = data.frame(metadata), aes(x = total_counts, fill = group)) +
-  geom_histogram(bins=30) +
-  scale_y_log10() +
-  labs(x = "total_counts", y = "frequency")
 
 #improving the demixing usifn FASTQ Search pipeline 
 #FASTAQ screen is present on cluster
@@ -230,7 +226,7 @@ cd /cephfs2/hannas/demixing/data/genome
 
 #bowtie2 chimp genome indexing 
 #https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer
-bowtie2-build Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa Pan_tro_3.0
+nohup bowtie2-build Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa Pan_tro_3.0
 
 cd /net/nfs1/public/genomics/soft/bin
 emacs fastq_screen.conf
