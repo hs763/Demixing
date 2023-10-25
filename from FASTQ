@@ -226,10 +226,27 @@ cd /cephfs2/hannas/demixing/data/genome
 
 #bowtie2 chimp genome indexing 
 #https://bowtie-bio.sourceforge.net/bowtie2/manual.shtml#the-bowtie2-build-indexer
-nohup bowtie2-build Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa Pan_tro_3.0
+#/cephfs2/hannas/demixing/data/FastQScreen
+nohup bowtie2-build /cephfs2/hannas/demixing/data/genome/Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa Pan_tro_3.0 
 
-cd /net/nfs1/public/genomics/soft/bin
-emacs fastq_screen.conf
+nohup bowtie2-build Pan_troglodytes.Pan_tro_3.0.dna.chromosome.19.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.6.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.10.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.1.fa.gz   Pan_troglodytes.Pan_tro_3.0.dna.chromosome.7.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.11.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.20.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.8.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.12.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.21.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.9.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.13.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.22.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.MT.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.14.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.2A.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.X.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.15.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.2B.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.Y.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.16.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.3.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.nonchromosomal.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.17.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.4.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.18.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.5.fa.gz Pan_tro_3
+
+cd /cephfs2/hannas/demixing/results/FastQScreen_out
+# cd /net/nfs1/public/genomics/soft/bin
+DATA='/cephfs2/hannas/demixing/data'
+
+nohup fastq_screen --conf $DATA/genome/fastq_screen_demixing.conf \
+$DATA/reads/H9_6k_128d_fastqs/KAN030_H9_6k_128d_S6_L008_I1_001.fastq  \
+$DATA/reads/H9_6k_128d_fastqs/KAN030_H9_6k_128d_S6_L008_R2_001.fastq \
+$DATA/reads/H9_6k_128d_fastqs/KAN030_H9_6k_128d_S6_L008_R1_001.fastq \
+$DATA/reads/Sandra_6k_120d_fastqs/KAN027_Sandra_6k_120d_1_S3_L005_I1_001.fastq \ 
+$DATA/reads/Sandra_6k_120d_fastqs/KAN027_Sandra_6k_120d_1_S3_L005_R2_001.fastq \
+$DATA/reads/Sandra_6k_120d_fastqs/KAN027_Sandra_6k_120d_1_S3_L005_R1_001.fastq &
+
+
+
+
+
 
 
 
