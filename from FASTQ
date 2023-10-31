@@ -1,9 +1,11 @@
+srun  --pty
 singularity shell --bind $PWD:/mnt luca_r_env.sif
-singularity shell --bind /mnt:/cdphfs2/hannas luca_r_env.sif
+singularity shell --bind /cephfs2/hannas/demixing:/mnt luca_r_env.sif
 cd /mnt
 
 cd /cephfs2/hannas/demixing/data/reads
 
+###########DOWNLOADING THE FASTQ FILES#############################
 #human FASTQ file 
 wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz
 wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN030_H9_6k_128d_S6_L008_R2_001.fastq.gz
@@ -20,6 +22,8 @@ gunzip KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz H9_128d_org1.fastq
 gunzip KAN030_H9_6k_128d_S6_L008_R2_001.fastq.gz 
 gunzip KAN030_H9_6k_128d_S6_L008_I1_001.fastq.gz
 
+
+############MAKING REFERENCE GENOMES################################
 #getting genomes from ENSEMBLE
 #for .fa use primary assembly ot top-level files
 # chimp .fa and .gtf respectively 
@@ -44,7 +48,8 @@ cellranger mkref --genome=GRCh38 --fasta=Homo_sapiens.GRCh38.dna.primary_assembl
                  --genome=Pan_tro_3 --fasta=Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa --genes=Pan_troglodytes.Pan_tro_3.0.110.filtered.gtf
 
 
-#aligning human and chimp FASTQ agaisn mixed genome 
+
+############aligning human and chimp FASTQ agaisn mixed genome################## 
 nohup cellranger count \
     --id=human_mixed_ref \
     --fastqs=/cephfs2/hannas/demixing/data/reads/H9_6k_128d_fastqs \
@@ -57,7 +62,10 @@ nohup cellranger count \
 
 #reading human matrix into r
 
-##########################HUMAN FASTQ#######################################
+
+
+
+##########################READIGN HUMAN FASTQ INTO A MATRIX#########################################
 library(Matrix)
 matrix_dir = "/lmb/home/hannas/human_mixed_ref/outs/raw_feature_bc_matrix/"
 barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
@@ -116,7 +124,7 @@ metadata2 <- metadata2[-c(empty_cells),]
 metadata_human <- metadata2
 write.csv(metadata_human, "metadata_human.csv")
 
-#################CHIMPANZEE FASTQ ###########################################
+#################READING CHIMPANZEE FASTQ INTO A MATRIX###########################################
 matrix_dir = "/lmb/home/hannas/chimp_mixed_ref/outs/raw_feature_bc_matrix/"
 barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
 features.path <- paste0(matrix_dir, "features.tsv.gz")
@@ -151,7 +159,7 @@ chimp_mat_ch <- chimp_mat[20071:43372,]
 dim(chimp_mat_ch)
 #23302 495782
 
-#building a matadata 
+######################  building a matadata ########################
 #rows = cell_IDs
 metadata <- matrix(NA, nrow = 495782, ncol = 1)
 rownames(metadata) <- colnames(chimp_mat) 
@@ -208,7 +216,7 @@ for (i in 1:nrow(metadata)){
   }
 }
 
-#evaluating the predictions
+########################### evaluating the predictions ######################################
 mispredictions <- which(metadata$predic_species != metadata$original_species)
 length(mispredictions)
 #45489
@@ -218,7 +226,45 @@ dim(metadata)
 #0.0828374 
 #about 8% of the cells species were mispredicted 
 
+######################### improving demixing strategy ##########################################
 
+########################treshold approach ######################################################
+
+singularity shell --bind /cephfs2/hannas/demixing:/mnt luca_r_env.sif
+cd /mnt/results
+
+#open R in the container
+meta <- read.csv("metadata.csv")
+
+library(ggplot2) 
+#human mapping rates in all cells 
+pdf("mapping_rate_stribution_h")
+ggplot(meta, aes(x=h_counts_ratio)) + geom_histogram(color="blue", fill= "blue", bins = 30) +labs(x ="Human transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for human transcripts")
+dev.off()
+
+#chimp mapping rates in all cells 
+pdf("mapping_rate_stribution_ch")
+ggplot(meta, aes(x=ch_counts_ratio)) + geom_histogram(color="orange", fill= "orange", bins = 30) +labs(x ="Chimp transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for mouse transcripts")
+dev.off()
+
+meta_sorted <- meta[meta$total_counts>400,]
+ggplot(meta_sorted, aes(x=total_counts)) + geom_histogram(color="green", fill= "green", bins = 30) +labs(x ="Counts", y= "Number of cells",title = "Counts distribution")
+ggplot(meta_sorted, aes(x=h_counts_ratio)) + geom_histogram(color="blue", fill= "blue", bins = 30) +labs(x ="Human transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for human transcripts")
+ggplot(meta_sorted, aes(x=ch_counts_ratio)) + geom_histogram(color="orange", fill= "orange", bins = 30) +labs(x ="Chimp transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for mouse transcripts")
+
+#it loks like a good cut off point is 0.5 If bigger than the cell i human otherwise its chimp.
+mispredictions <- which(meta_sorted$predic_species != meta_sorted$original_species)
+length(mispredictions)
+[1] 0
+
+meta_sorted <- meta[meta$total_counts>100,]
+mispredictions <- which(meta_sorted$predic_species != meta_sorted$original_species)
+length(mispredictions)
+[1] 1
+
+#conclusions: sorting out the cells wich are not actually cells and fitting the tresholds best works well. 
+
+########################FASTQ approach - disproved by Madeline##################################
 #improving the demixing usifn FASTQ Search pipeline 
 #FASTAQ screen is present on cluster
 #aligning the reads agains humna and chimp genomes to find the uniuque reads which are present only in one species 
@@ -231,19 +277,21 @@ nohup bowtie2-build /cephfs2/hannas/demixing/data/genome/Pan_troglodytes.Pan_tro
 
 nohup bowtie2-build Pan_troglodytes.Pan_tro_3.0.dna.chromosome.19.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.6.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.10.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.1.fa.gz   Pan_troglodytes.Pan_tro_3.0.dna.chromosome.7.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.11.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.20.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.8.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.12.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.21.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.9.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.13.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.22.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.MT.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.14.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.2A.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.X.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.15.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.2B.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.Y.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.16.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.3.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.nonchromosomal.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.17.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.4.fa.gz Pan_troglodytes.Pan_tro_3.0.dna.chromosome.18.fa.gz  Pan_troglodytes.Pan_tro_3.0.dna.chromosome.5.fa.gz Pan_tro_3
 
+#runign FastQ Screen to select the unique seuences for humana nd chimp genomes 
 cd /cephfs2/hannas/demixing/results/FastQScreen_out
 # cd /net/nfs1/public/genomics/soft/bin
 DATA='/cephfs2/hannas/demixing/data'
 
-nohup fastq_screen --conf $DATA/genome/fastq_screen_demixing.conf \
-$DATA/reads/H9_6k_128d_fastqs/KAN030_H9_6k_128d_S6_L008_I1_001.fastq  \
-$DATA/reads/H9_6k_128d_fastqs/KAN030_H9_6k_128d_S6_L008_R2_001.fastq \
-$DATA/reads/H9_6k_128d_fastqs/KAN030_H9_6k_128d_S6_L008_R1_001.fastq \
-$DATA/reads/Sandra_6k_120d_fastqs/KAN027_Sandra_6k_120d_1_S3_L005_I1_001.fastq \ 
-$DATA/reads/Sandra_6k_120d_fastqs/KAN027_Sandra_6k_120d_1_S3_L005_R2_001.fastq \
-$DATA/reads/Sandra_6k_120d_fastqs/KAN027_Sandra_6k_120d_1_S3_L005_R1_001.fastq &
+nohup fastq_screen --conf $DATA/genome/fastq_screen.conf /cephfs2/hannas/demixing/data/reads/H9_6k_128d_fastqs/*.fastq &
+nohup fastq_screen --tag --filter 001 --conf $DATA/genome/fastq_screen.conf $DATA/reads/H9_6k_128d_fastqs/KAN030_H9_6k_128d_S6_L008_R2_001.fastq $DATA/reads/Sandra_6k_120d_fastqs/KAN027_Sandra_6k_120d_1_S3_L005_R2_001.fastq &
+
+#there are many more unique seuences for huamn cells
+#output: KAN027_Sandra_6k_120d_1_S3_L005_R2_001.tagged_filter.fastq and KAN030_H9_6k_128d_S6_L008_R2_001.tagged_filter.fastq
+#alignign the sequnces agaisn the mixed_reference genome
 
 
+nohup STAR --runMode genomeGenerate --genomeDir /cephfs2/hannas/demixing/data/genome/index --genomeFastaFiles /cephfs2/hannas/demixing/data/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile /cephfs2/hannas/demixing/data/genome/Homo_sapiens.GRCh38.110.filtered.gtf &
+nohup STAR --genomeDir /cephfs2/hannas/demixing/data/genome/index --readFilesIn /cephfs2/hannas/demixing/results/FastQScreen_out/KAN030_H9_6k_128d_S6_L008_R2_001.tagged_filter.fastq --outFileNamePrefix output_huniqseq &
 
 
 
