@@ -31,7 +31,7 @@ wget https://ftp.ensembl.org/pub/release-110/fasta/pan_troglodytes/dna/Pan_trogl
 wget https://ftp.ensembl.org/pub/release-110/gtf/pan_troglodytes/Pan_troglodytes.Pan_tro_3.0.110.gtf.gz
 
 #makign reference genome
-#from Ensembl database wget the FASTQ files with primary_assembly/yoplevel and GFT file
+#from Ensembl database wget the FASTQ files with primary_assembly/toplevel and GFT file
 #filter only portein coding genes to prevent mutiple mapping. 
 cellranger mkgtf \
   Homo_sapiens.GRCh38.110.gtf \
