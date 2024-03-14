@@ -264,6 +264,19 @@ length(mispredictions)
 
 #conclusions: sorting out the cells wich are not actually cells and fitting the tresholds best works well. 
 
+
+
+
+
+
+
+
+
+
+
+
+
+#just notes:
 ########################FASTQ approach - disproved by Madeline##################################
 #improving the demixing usifn FASTQ Search pipeline 
 #FASTAQ screen is present on cluster
