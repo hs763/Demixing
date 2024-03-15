@@ -1,10 +1,8 @@
-srun  --pty
-singularity shell --bind $PWD:/mnt //public/singularity/containers/hania/luca_r_env.sif
-singularity shell --bind /cephfs2/hannas/demixing:/mnt luca_r_env.sif
-cd /mnt
+srun  --pty bash
+#singularity shell --bind $PWD:/mnt /public/singularity/containers/hania/luca_r_env.sif
+#singularity shell --bind /cephfs2/hannas/demixing:/mnt /public/singularity/containers/hania/luca_r_env.sif
 
-cd /mnt/data/reads
-
+cd /cephfs2/hannas/demixing/
 ###########DOWNLOADING THE FASTQ FILES#############################
 #human FASTQ file 
 wget ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-7552/KAN030_H9_6k_128d_S6_L008_R1_001.fastq.gz
@@ -47,6 +45,16 @@ cellranger mkgtf \
 cellranger mkref --genome=GRCh38 --fasta=Homo_sapiens.GRCh38.dna.primary_assembly.fa --genes=Homo_sapiens.GRCh38.110.filtered.gtf \
                  --genome=Pan_tro_3 --fasta=Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa --genes=Pan_troglodytes.Pan_tro_3.0.110.filtered.gtf
 
+#making separate reference genomes
+cellranger mkref \
+    --genome=GRCh38 \
+    --fasta=Homo_sapiens.GRCh38.dna.alt.fa \
+    --genes=Homo_sapiens.GRCh38.110.gtf  
+
+cellranger mkref \
+    --genome=Pan_tro_3.0 \
+    --fasta=Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa \
+    --genes=Pan_troglodytes.Pan_tro_3.0.110.gtf  
 
 
 ############aligning human and chimp FASTQ agaisn mixed genome################## 
@@ -61,6 +69,16 @@ nohup cellranger count \
     --transcriptome=/cephfs2/hannas/demixing/data/genome/GRCh38_and_Pan_tro_3
 
 #reading human matrix into r
+
+nohup cellranger count \
+    --id=chimp_huamn_ref \
+    --fastqs=/cephfs2/hannas/demixing/data/reads/Sandra_6k_120d_fastqs \
+    --transcriptome=/cephfs2/hannas/demixing/data/genome/GRCh38
+
+nohup cellranger count \
+    --id=chimp_chimp_ref \
+    --fastqs=/cephfs2/hannas/demixing/data/reads/Sandra_6k_120d_fastqs \
+    --transcriptome=/cephfs2/hannas/demixing/data/genome/Pan_tro_3.0
 
 
 
