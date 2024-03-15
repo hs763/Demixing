@@ -1,9 +1,9 @@
 srun  --pty
-singularity shell --bind $PWD:/mnt luca_r_env.sif
+singularity shell --bind $PWD:/mnt //public/singularity/containers/hania/luca_r_env.sif
 singularity shell --bind /cephfs2/hannas/demixing:/mnt luca_r_env.sif
 cd /mnt
 
-cd /cephfs2/hannas/demixing/data/reads
+cd /mnt/data/reads
 
 ###########DOWNLOADING THE FASTQ FILES#############################
 #human FASTQ file 
@@ -244,7 +244,7 @@ dev.off()
 
 #chimp mapping rates in all cells 
 pdf("mapping_rate_stribution_ch")
-ggplot(meta, aes(x=ch_counts_ratio)) + geom_histogram(color="orange", fill= "orange", bins = 30) +labs(x ="Chimp transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for mouse transcripts")
+ggplot(meta, aes(x=ch_counts_ratio)) + geom_histogram(color="orange", fill= "orange", bins = 30) +labs(x ="Chimp transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for chimp transcripts")
 dev.off()
 
 meta_sorted <- meta[meta$total_counts>400,]
