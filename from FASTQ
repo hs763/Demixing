@@ -68,7 +68,8 @@ nohup cellranger count \
     --fastqs=/cephfs2/hannas/demixing/data/reads/Sandra_6k_120d_fastqs \
     --transcriptome=/cephfs2/hannas/demixing/data/genome/GRCh38_and_Pan_tro_3
 
-#reading human matrix into r
+#aligning chimp reads agaisn only human reference genome and only chimp reference genome and comparing 
+#how many reads there in contrast to mixed reference genome 
 
 nohup cellranger count \
     --id=chimp_huamn_ref \
