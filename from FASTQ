@@ -47,14 +47,14 @@ cellranger mkref --genome=GRCh38 --fasta=Homo_sapiens.GRCh38.dna.primary_assembl
 
 #making separate reference genomes
 cellranger mkref \
-    --genome=GRCh38 \
-    --fasta=Homo_sapiens.GRCh38.dna.alt.fa \
-    --genes=Homo_sapiens.GRCh38.110.gtf  
+    --genome=GRCh38_humanonly \
+    --fasta=Homo_sapiens.GRCh38.dna.primary_assembly.fa \
+    --genes=Homo_sapiens.GRCh38.110.filtered.gtf 
 
 cellranger mkref \
-    --genome=Pan_tro_3.0 \
+    --genome=Pan_tro_3.0_chimponly \
     --fasta=Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa \
-    --genes=Pan_troglodytes.Pan_tro_3.0.110.gtf  
+    --genes=Pan_troglodytes.Pan_tro_3.0.110.filtered.gtf 
 
 
 ############aligning human and chimp FASTQ agaisn mixed genome################## 
@@ -144,6 +144,7 @@ metadata_human <- metadata2
 write.csv(metadata_human, "metadata_human.csv")
 
 #################READING CHIMPANZEE FASTQ INTO A MATRIX###########################################
+library(Matrix)
 matrix_dir = "/lmb/home/hannas/chimp_mixed_ref/outs/raw_feature_bc_matrix/"
 barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
 features.path <- paste0(matrix_dir, "features.tsv.gz")
@@ -177,6 +178,45 @@ dim(chimp_mat_h)
 chimp_mat_ch <- chimp_mat[20071:43372,]
 dim(chimp_mat_ch)
 #23302 495782
+
+###############################################READING CHIMPANZEE FASTQ INTO A MATRIX ########################################################################
+#############################alignement to chimp only, human only and mixed reference genme comparison##########################################################
+#CHIMP agains CHIMP only REFERENCE GENOME
+
+singularity shell --bind /cephfs2/hannas/demixing:/mnt /public/singularity/containers/hania/luca_r_env.sif
+cd /mnt/results
+R
+
+library(Matrix)
+matrix_dir = "/lmb/home/hannas/chimp_chimp_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+chimp_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(chimp_mat) = barcode.names$V1
+rownames(chimp_mat) = feature.names$V1
+
+#CHIMP against HUMAN only REFERENCE GENOME
+matrix_dir = "/lmb/home/hannas/chimp_human_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+chimp_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(chimp_mat) = barcode.names$V1
+rownames(chimp_mat) = feature.names$V1
+
 
 ######################  building a matadata ########################
 #rows = cell_IDs
