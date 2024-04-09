@@ -28,6 +28,10 @@ gunzip KAN030_H9_6k_128d_S6_L008_I1_001.fastq.gz
 wget https://ftp.ensembl.org/pub/release-110/fasta/pan_troglodytes/dna/Pan_troglodytes.Pan_tro_3.0.dna.toplevel.fa.gz
 wget https://ftp.ensembl.org/pub/release-110/gtf/pan_troglodytes/Pan_troglodytes.Pan_tro_3.0.110.gtf.gz
 
+#macaque
+wget https://ftp.ensembl.org/pub/release-111/fasta/macaca_nemestrina/dna/Macaca_nemestrina.Mnem_1.0.dna.toplevel.fa.gz
+wget https://ftp.ensembl.org/pub/release-111/gtf/macaca_nemestrina/Macaca_nemestrina.Mnem_1.0.111.gtf.gz
+
 #makign reference genome
 #from Ensembl database wget the FASTQ files with primary_assembly/toplevel and GFT file
 #filter only portein coding genes to prevent mutiple mapping. 
