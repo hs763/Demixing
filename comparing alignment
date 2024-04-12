@@ -114,12 +114,212 @@ sum(ch_mix_counts) #21104635
 [1] 0.07227434
 #So when alignign to mixed gneome oyou get more counts than when aligning to single genome. 
 #You get about 7% more counts when aligning to mixed compared to single genome. 
-  
+
+25967458 - 21104635 = 4862823
+#4862823 reads were lost between alignign chimp to mixed genoem compared with one-species genome. 
+4862823/25967458 = 0.187266
+#this is about 19% percent of genes being lost betweena ligning to mix vs one-species genome. 
+
 
 write.csv(metadata_chimp_comparison, "metadata_chimp_comparison.csv")
 write.csv(ch_mix_counts, "ch_mix_counts.csv")
 write.csv(h_mix_counts, "h_mix_counts.csv")
 
 
-#solution: ????
+
+
+
+#################human_human_ref#########################################  
+library(Matrix)
+matrix_dir = "/cephfs2/hannas/demixing/results/human_chimp/human_human_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+h_h_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(h_h_mat) = barcode.names$V1
+rownames(h_h_mat) = feature.names$V1
+
+dim(h_h_mat) #20070 454945
+
+#building a matadata 
+#rows = cell_IDs
+metadata <- matrix(NA, nrow = 454945, ncol = 1)
+rownames(metadata) <- colnames(h_h_mat) 
+total_counts <- colSums(h_h_mat)
+metadata[,1] <- total_counts
+colnames(metadata) <- c("total_counts") 
+
+#removign cells with zero reads
+empty_cells <- grep(0, metadata[,1])
+length(empty_cells) #140988
+
+metadata2 <- metadata
+metadata2 <- metadata2[-c(empty_cells),]
   
+length(metadata2) #313957
+length(metadata) #454945
+
+
+#################human_mixed_ref#########################################  
+matrix_dir = "/cephfs2/hannas/demixing/results/human_chimp/human_mixed_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+h_mix_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(h_mix_mat) = barcode.names$V1
+rownames(h_mix_mat) = feature.names$V1
+
+dim(h_mix_mat) #[1]  43372 454945
+
+human_mat_row_h <- grep("^GRCh38", rownames(h_mix_mat))
+length(human_mat_row_h) 
+#20070
+
+human_mat_row_ch <- grep("^Pan_tro_3", rownames(h_mix_mat))
+length(human_mat_row_ch) 
+#23302
+
+h_mix_mat_h <- h_mix_mat[1:20070,]
+dim(h_mix_mat_h) #[1]  20070 454945
+h_mix_counts <- colSums(h_mix_mat_h)
+sum(h_mix_counts) #23117397
+  
+h_mix_mat_ch <- h_mix_mat[20071:43372,]
+dim(h_mix_mat_ch) #23302 454945
+ch_mix_counts <- colSums(h_mix_mat_ch)
+sum(ch_mix_counts) #566155
+
+#how many human reads map to chimp genome. THe numberis comparable to huamn. 
+566155/(566155+23117397)
+0.02390499
+  
+metadata <- cbind(metadata, h_mix_counts)
+colnames(metadata) <- c("h_h_counts", "h_mix_counts") 
+
+empty_cells <- grep(0, metadata[,1])
+length(empty_cells) #[1] 140988
+
+metadata3 <- metadata
+metadata3 <- metadata3[-c(empty_cells),]
+metadata_chimp_comparison <- metadata3
+metadata_chimp_comparison <- as.data.frame(metadata_chimp_comparison)
+
+any(metadata_chimp_comparison$h_h_counts != metadata_chimp_comparison$h_mix_counts)
+length(metadata_chimp_comparison$h_h_counts) #[1] 313957
+different <- (metadata_chimp_comparison$h_h_counts != metadata_chimp_comparison$h_mix_counts)
+true_count <- sum(different) #157782
+
+#157782/313957 = 0.5025593
+#for over 50% of the cells the chimp trasncript count is different when aligned to the the chimp or mixed reference genome. 
+
+sum(metadata_chimp_comparison$h_h_counts) #23847416
+sum(metadata_chimp_comparison$h_mix_counts) #16159073
+sum(h_mix_counts) #23117397
+sum(ch_mix_counts) #566155
+
+
+sum(metadata_h_h) #[1] 23847416
+#the number of counts when aligning to chimpanzee genome only. 
+sum(h_mix_counts) #23117397
+sum(ch_mix_counts) #566155
+#sum of these =  23683552
+163864 more mapped when aligned to teh mixed reference genome.
+163864/23847416
+[1] 0.006871352
+#So when alignign to mixed gneome oyou get more counts than when aligning to single genome. 
+#You get about <1% more counts when aligning to mixed compared to single genome. 
+
+23847416 -23117397 = 730019
+730019 reads less mapped to human genome in mixed genoem compared to one-species genome. 
+730019/23847416 = 0.03061208
+about 3% of human reads are lost when maping to mixed genome. 
+
+metadata_human_comparison <- metadata_chimp_comparison
+write.csv(metadata_human_comparison, "metadata_human_comparison.csv")
+write.csv(ch_mix_counts, "ch_mix_counts.csv")
+write.csv(h_mix_counts, "h_mix_counts.csv")
+
+
+#####################################################################################
+#####################################################################################
+library(Matrix)
+matrix_dir = "/cephfs2/hannas/demixing/results/human_chimp_macaq/human_HCM_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+h_hcm_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(h_hcm_mat) = barcode.names$V1
+rownames(h_hcm_mat) = feature.names$V1
+
+dim(h_hcm_mat) #45085 454945
+
+human_mat_row_h <- grep("^GRCh38", rownames(h_hcm_mat))
+length(human_mat_row_h) 
+#20070
+
+human_mat_row_ch <- grep("^PanTro3", rownames(h_hcm_mat))
+length(human_mat_row_ch) 
+#23302
+
+human_mat_row_m <- grep("^Mnem", rownames(h_hcm_mat))
+length(human_mat_row_m)
+#1713
+
+h_hcm_mat_h <- h_hcm_mat[1:20070,]
+dim(h_hcm_mat_h) #[1]  20070 454945
+h_hcm_counts <- colSums(h_hcm_mat_h)
+sum(h_hcm_counts) #22851169
+  
+h_hcm_mat_ch <- h_hcm_mat[20071:43372,]
+dim(h_hcm_mat_ch) #23302 454945
+ch_hcm_counts <- colSums(h_hcm_mat_ch)
+sum(ch_hcm_counts) #560619
+
+h_hcm_mat_m <- h_hcm_mat[43373:45085,]
+dim(h_hcm_mat_m) #1713 454945
+m_hcm_counts <- colSums(h_hcm_mat_m)
+sum(m_hcm_counts) #11553
+
+what percentage of reads have aligned to wrong genome? 
+(560619+11553)/(11553+560619+22851169) = 0.02442743
+#very similar to the mixed genome of to species. 
+
+metadata <- cbind(h_hcm_counts, ch_hcm_counts, m_hcm_counts)
+colnames(metadata) <- c("h_hcm_counts", "ch_hcm_counts", "m_hcm_counts") 
+empty_cells <- grep(0, metadata[,1])
+length(empty_cells) #[1] 191106 
+
+metadata3 <- metadata
+metadata3 <- metadata3[-c(empty_cells),]
+metadata_human_3comparison <- metadata3
+metadata_human_3comparison <- as.data.frame(metadata_human_3comparison)
+write.csv(metadata_human_3comparison, "metadata_human_3comparison.csv") #in "/cephfs2/hannas/demixing/results/human_chimp_macaq"
+
+dim(metadata_human_3comparison) #[1] 263839
+different <- (metadata_human_3comparison$h_hcm_counts != metadata_human_3comparison$ch_hcm_counts | metadata_human_3comparison$h_hcm_counts != metadata_human_3comparison$m_hcm_counts)
+true_count <- sum(different) # 263839
+
+sum(metadata_human_3comparison$h_hcm_counts) #17316023
+sum(metadata_human_3comparison$ch_hcm_counts) #422513
+sum(metadata_human_3comparison$m_hcm_counts) #8785
+# I am not sure if this is influenced by the number cells removed due t lack of reads (but it shouldnt). Check that on monday. 
+
+
