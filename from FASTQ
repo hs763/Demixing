@@ -341,6 +341,55 @@ length(mispredictions)
 
 #conclusions: sorting out the cells wich are not actually cells and fitting the tresholds best works well. 
 
+#######################################################################################################################
+####################### triple mixed reference genome ##############################################################
+library(Matrix)
+matrix_dir = "/cephfs2/hannas/demixing/results/human_chimp_macaq/human_HCM_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+h_hcm_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(h_hcm_mat) = barcode.names$V1
+rownames(h_hcm_mat) = feature.names$V1
+
+dim(h_hcm_mat) #45085 454945
+
+human_mat_row_h <- grep("^GRCh38", rownames(h_hcm_mat))
+length(human_mat_row_h) 
+#20070
+
+human_mat_row_ch <- grep("^PanTro3", rownames(h_hcm_mat))
+length(human_mat_row_ch) 
+#23302
+
+human_mat_row_m <- grep("^Mnem", rownames(h_hcm_mat))
+length(human_mat_row_m)
+#1713
+
+h_hcm_mat_h <- h_hcm_mat[1:20070,]
+dim(h_hcm_mat_h) #[1]  20070 454945
+h_mix_counts <- colSums(h_hcm_mat_h)
+sum(h_mix_counts) #22851169
+  
+h_hcm_mat_ch <- h_hcm_mat[20071:43372,]
+dim(h_hcm_mat_ch) #23302 454945
+ch_mix_counts <- colSums(h_hcm_mat_ch)
+sum(ch_mix_counts) #560619
+
+h_hcm_mat_m <- h_hcm_mat[43373:45085,]
+dim(h_hcm_mat_m) #1713 454945
+m_mix_counts <- colSums(h_hcm_mat_m)
+sum(m_mix_counts) #11553
+
+
+
+
 
 
 
