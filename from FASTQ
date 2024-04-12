@@ -62,28 +62,42 @@ cellranger mkref \
 
 
 ############aligning human and chimp FASTQ agaisn mixed genome################## 
-nohup cellranger count \
-    --id=human_mixed_ref \
+cellranger count \
+    --id=human_HCM_ref \
     --fastqs=/cephfs2/hannas/demixing/data/reads/H9_6k_128d_fastqs \
-    --transcriptome=/cephfs2/hannas/demixing/data/genome/GRCh38_and_Pan_tro_3
+    --transcriptome=/cephfs2/hannas/demixing/data/genomes/GRCh38_and_PanTro3_and_Mnem
 
-nohup cellranger count \
-    --id=chimp_mixed_ref \
+cellranger count \
+    --id=chimp_HCM_ref \
     --fastqs=/cephfs2/hannas/demixing/data/reads/Sandra_6k_120d_fastqs \
-    --transcriptome=/cephfs2/hannas/demixing/data/genome/GRCh38_and_Pan_tro_3
+    --transcriptome=/cephfs2/hannas/demixing/data/genomes/GRCh38_and_PanTro3_and_Mnem
+
+cellranger count \
+    --id=macaq_HCM_ref \
+    --fastqs=/cephfs2/hannas/demixing/data/reads/MN1_fastqs \
+    --transcriptome=/cephfs2/hannas/demixing/data/genomes/GRCh38_and_PanTro3_and_Mnem
+#HCM_align 4631424
+
 
 #aligning chimp reads agaisn only human reference genome and only chimp reference genome and comparing 
 #how many reads there in contrast to mixed reference genome 
 
-nohup cellranger count \
-    --id=chimp_huamn_ref \
-    --fastqs=/cephfs2/hannas/demixing/data/reads/Sandra_6k_120d_fastqs \
-    --transcriptome=/cephfs2/hannas/demixing/data/genome/GRCh38
+cellranger count \
+    --id=human_huamn_ref \
+    --fastqs=/cephfs2/hannas/demixing/data/reads/H9_6k_128d_fastqs \
+    --transcriptome=/cephfs2/hannas/demixing/data/genomes/GRCh38
 
-nohup cellranger count \
+cellranger count \
+    --id=human_chimp_ref \
+    --fastqs=/cephfs2/hannas/demixing/data/reads/H9_6k_128d_fastqs \
+    --transcriptome=/cephfs2/hannas/demixing/data/genomes/PanTro3
+#4631444 ssubmitted 
+
+cellranger count \
     --id=chimp_chimp_ref \
     --fastqs=/cephfs2/hannas/demixing/data/reads/Sandra_6k_120d_fastqs \
-    --transcriptome=/cephfs2/hannas/demixing/data/genome/Pan_tro_3.0
+    --transcriptome=/cephfs2/hannas/demixing/data/genomes/PanTro3
+#4631427 submitted 
 
 
 
