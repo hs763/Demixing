@@ -1,0 +1,170 @@
+library(Matrix)
+matrix_dir = "/cephfs2/hannas/demixing/results/human_chimp_macaq/human_HCM_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+human_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(human_mat) = barcode.names$V1
+rownames(human_mat) = feature.names$V1
+
+matrix_dir = "/cephfs2/hannas/demixing/results/human_chimp_macaq/chimp_HCM_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+chimp_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(chimp_mat) = barcode.names$V1
+rownames(chimp_mat) = feature.names$V1
+
+matrix_dir = "/cephfs2/hannas/demixing/results/human_chimp_macaq/macaq_HCM_ref/outs/raw_feature_bc_matrix/"
+barcode.path <- paste0(matrix_dir, "barcodes.tsv.gz")
+features.path <- paste0(matrix_dir, "features.tsv.gz")
+matrix.path <- paste0(matrix_dir, "matrix.mtx.gz")
+macaq_mat <- readMM(file = matrix.path)
+feature.names = read.delim(features.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+barcode.names = read.delim(barcode.path,
+                           header = FALSE,
+                           stringsAsFactors = FALSE)
+colnames(macaq_mat) = barcode.names$V1
+rownames(macaq_mat) = feature.names$V1
+
+
+#examining dimentions
+dim(human_mat)
+[1]  45085 454945
+> dim(chimp_mat)
+[1]  45085 495782
+> dim(macaq_mat)
+[1]  45085 284410
+
+#finding the rows with human genes and chimp genes
+human_mat_row_h <- grep("^GRCh38", rownames(human_mat))
+length(human_mat_row_h) #20070
+human_mat_row_ch <- grep("^PanTro3", rownames(human_mat))
+length(human_mat_row_ch) #23302
+human_mat_row_m <- grep("^Mnem", rownames(human_mat))
+length(human_mat_row_m) #1713
+
+chimp_mat_row_h <- grep("^GRCh38", rownames(chimp_mat))
+length(chimp_row_h) #20070
+chimp_row_ch <- grep("^PanTro3", rownames(chimp_mat))
+length(chimp_row_ch) #23302
+chimp_row_m <- grep("^Mnem", rownames(chimp_mat))
+length(chimp_row_m) #1713
+
+chimp_mat_row_h <- grep("^GRCh38", rownames(macaq_mat))
+length(chimp_row_h) #20070
+chimp_row_ch <- grep("^PanTro3", rownames(macaq_mat))
+length(chimp_row_ch) #23302
+chimp_row_m <- grep("^Mnem", rownames(macaq_mat))
+length(chimp_row_m) #1713
+
+human_mat_h <- human_mat[1:20070,]
+dim(human_mat_h) #[1]  20070 454945
+h_hcm_counts_h <- colSums(human_mat_h)
+sum(h_hcm_counts_h) #22851169
+
+human_mat_ch <- human_mat[20071:43372,]
+dim(human_mat_ch) #23302 454945
+h_hcm_counts_ch <- colSums(human_mat_ch)
+sum(h_hcm_counts_ch) #560619
+
+human_mat_m <- human_mat[43373:45085,]
+dim(human_mat_m) #1713 454945
+h_hcm_counts_m <- colSums(human_mat_m)
+sum(h_hcm_counts_m) #11553
+
+
+chimp_mat_h <- chimp_mat[1:20070,]
+dim(chimp_mat_h) #[1]  20070 495782
+ch_hcm_counts_h <- colSums(chimp_mat_h)
+sum(ch_hcm_counts_h) #6474102
+
+chimp_mat_ch <- chimp_mat[20071:43372,]
+dim(chimp_mat_ch) #23302 495782
+ch_hcm_counts_ch <- colSums(chimp_mat_ch)
+sum(ch_hcm_counts_ch) #21052271
+
+chimp_mat_m <- chimp_mat[43373:45085,]
+dim(chimp_mat_m) #1713 495782
+ch_hcm_counts_m <- colSums(chimp_mat_m)
+sum(ch_hcm_counts_m) #30124
+
+
+macaq_mat_h <- macaq_mat[1:20070,]
+dim(macaq_mat_h) #[1]  20070 284410
+m_hcm_counts_h <- colSums(macaq_mat_h)
+sum(m_hcm_counts_h) #1718257
+
+macaq_mat_ch <- macaq_mat[20071:43372,]
+dim(macaq_mat_ch) #23302 284410
+m_hcm_counts_ch <- colSums(macaq_mat_ch)
+sum(m_hcm_counts_ch) #1196237
+
+macaq_mat_m <- macaq_mat[43373:45085,]
+dim(macaq_mat_m) #1713 284410
+m_hcm_counts_m <- colSums(macaq_mat_m)
+sum(m_hcm_counts_m) #846869
+
+metadata_h <- cbind(h_hcm_counts_h, h_hcm_counts_ch, h_hcm_counts_m)
+metadata_ch <- cbind(ch_hcm_counts_h, ch_hcm_counts_ch, ch_hcm_counts_m)
+metadata_m <- cbind(m_hcm_counts_h, m_hcm_counts_ch, m_hcm_counts_m)
+
+empty_cells_h <- grep(0, metadata_h[,1])
+length(empty_cells_h) #191106
+metadata2_h <- metadata_h
+metadata2_h <- metadata2_h[-c(empty_cells_h),]
+write.csv(metadata2_h, "metadata_human_HCM_ref_QC.csv")
+write.csv(metadata_h, "metadata_human_HCM_ref_full.csv")
+dim(metadata_h)   #454945      3
+dim(metadata2_h)  #263839      3
+
+empty_cells_ch <- grep(0, metadata_ch[,2])
+length(empty_cells_ch) #254013
+metadata2_ch <- metadata_ch
+metadata2_ch <- metadata2_ch[-c(empty_cells_ch),]
+write.csv(metadata2_ch, "metadata_chimp_HCM_ref_QC.csv")
+write.csv(metadata_ch, "metadata_chimp_HCM_ref_full.csv")
+dim(metadata_ch)  #495782      3
+dim(metadata2_ch) #241769      3
+
+empty_cells_m <- grep(0, metadata_m[,3])
+length(empty_cells_m) #217196
+metadata2_m <- metadata_m
+metadata2_m <- metadata2_m[-c(empty_cells_m),]
+write.csv(metadata2_m, "metadata_macaq_HCM_ref_QC.csv")
+write.csv(metadata_m, "metadata_macaq_HCM_ref_full.csv")
+dim(metadata_m)  #284410    3
+dim(metadata2_m) #67214     3
+
+original <- rep("h", nrow(metadata2_h))  
+metadata2_h <- cbind(metadata2_h, as.factor(original))
+original <- rep("ch", nrow(metadata2_ch))  
+metadata2_ch <- cbind(metadata2_ch, as.factor(original))
+original <- rep("m", nrow(metadata2_m))  
+metadata2_m <- cbind(metadata2_m, as.factor(original))
+
+colnames(metadata2_h) <- c("X","h_counts","ch_counts","m_counts","original_species")
+colnames(metadata2_ch) <- c("X","h_counts","ch_counts","m_counts","original_species")
+colnames(metadata2_m) <- c("X","h_counts","ch_counts","m_counts","original_species")
+combined_matrix <- rbind(metadata2_h, metadata2_ch, metadata2_m) #dim: 1044031       5
+write.csv(combined_matrix, "combined_matrix.csv")
+combined_matrix$total_counts <- combined_matrix$h_counts + combined_matrix$ch_counts + combined_matrix$m_counts
+combined_matrix$h_counts_ratio <- combined_matrix$h_counts/combined_matrix$total_counts
+combined_matrix$ch_counts_ratio <- combined_matrix$ch_counts/combined_matrix$total_counts
+combined_matrix$m_counts_ratio <- combined_matrix$m_counts/combined_matrix$total_counts
+
+
