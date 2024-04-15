@@ -41,7 +41,8 @@ barcode.names = read.delim(barcode.path,
 colnames(macaq_mat) = barcode.names$V1
 rownames(macaq_mat) = feature.names$V1
 
-
+##############################################################################################################################################
+#preparing metadata
 #examining dimentions
 dim(human_mat)
 [1]  45085 454945
@@ -161,10 +162,177 @@ colnames(metadata2_h) <- c("X","h_counts","ch_counts","m_counts","original_speci
 colnames(metadata2_ch) <- c("X","h_counts","ch_counts","m_counts","original_species")
 colnames(metadata2_m) <- c("X","h_counts","ch_counts","m_counts","original_species")
 combined_matrix <- rbind(metadata2_h, metadata2_ch, metadata2_m) #dim: 1044031       5
-write.csv(combined_matrix, "combined_matrix.csv")
 combined_matrix$total_counts <- combined_matrix$h_counts + combined_matrix$ch_counts + combined_matrix$m_counts
 combined_matrix$h_counts_ratio <- combined_matrix$h_counts/combined_matrix$total_counts
 combined_matrix$ch_counts_ratio <- combined_matrix$ch_counts/combined_matrix$total_counts
 combined_matrix$m_counts_ratio <- combined_matrix$m_counts/combined_matrix$total_counts
 
+##############################################################################################################################################
+#predicting species:
+max_ratio <- apply(combined_matrix[, c("h_counts_ratio", "ch_counts_ratio", "m_counts_ratio")], 1, max)
+combined_matrix$predicted_species <- ifelse(max_ratio == combined_matrix$h_counts_ratio, "h",
+                                            ifelse(max_ratio == combined_matrix$ch_counts_ratio, "ch", "m"))
 
+write.csv(combined_matrix, "combined_matrix.csv")
+
+mispredictions <- which(combined_matrix$predicted_species != combined_matrix$original_species)
+length(mispredictions) #168495
+dim(combined_matrix) #1044031 10
+#% of cells that are mispredicted
+168495/1044031 = 0.1613889
+
+##############################################################################################################################################
+#plotting all the histograms an the species predictorions 
+
+library(ggplot2) 
+#human mapping rates in all cells 
+pdf("MappingRateDistribution_Human_CombinedMatrix.pdf")
+ggplot(combined_matrix, aes(x = h_counts_ratio, fill = original_species)) + 
+  geom_histogram(color = "#B19CD9", bins = 100) + 
+  labs(x = "Human Transcript Mapping Rate", y = "Number of Cells", title = "Distribution of Mapping Rate to Human Genome", fill="Original Species") +
+  theme(aspect.ratio = 1)
+dev.off()
+
+#chimp mapping rates in all cells 
+pdf("MappingRateDistribution_Chimp_CombinedMatrix.pdf")
+ggplot(combined_matrix, aes(x = ch_counts_ratio, fill = original_species)) + 
+  geom_histogram(color="#FFB347", bins = 100) + 
+  labs(x = "Chimpanzee Transcript Mapping Rate", y = "Number of Cells", title = "Distribution of Mapping Rate to Chimpanzee Genome", fill="Original Species") +
+  theme(aspect.ratio = 1)
+dev.off()
+
+#ggplot(combined_matrix, aes(x=m_counts_ratio)) + geom_histogram(color="#87CEEB" , fill= "#87CEEB" , bins = 100) +labs(x ="Macaque transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for Macaque transcripts")
+#ggplot(combined_matrix, aes(x=ch_counts_ratio)) + geom_histogram(color="#FFB347", fill= "#FFB347", bins = 100) +labs(x ="Chimpanzee transcript mapping rate", y= "Number of cells",title = "Mapping rate distribution for Chimpanzee transcripts")
+
+pdf("MappingRateDistribution_Macaq_CombinedMatrix.pdf")
+ggplot(combined_matrix, aes(x = m_counts_ratio, fill = original_species)) + 
+  geom_histogram(color="#87CEEB", bins = 100) + 
+  labs(x = "Macaque Transcript Mapping Rate", y = "Number of Cells", title = "Distribution of Mapping Rate to Macaque Genome", fill="Original Species") +
+  theme(aspect.ratio = 1)
+dev.off()
+
+pdf("total_counts_distribution_combined_matrix.pdf")
+ggplot(combined_matrix, aes(x = log(total_counts))) + 
+  geom_density(color = "#B19CD9", fill = "#B19CD9") +  # Corrected color code for line
+  labs(x = "Log(Total counts)", y = "Density", title = "Distribution of Log(Total Counts)")
+dev.off()
+
+##############################################################################################################################################
+#applying a filter to remove the low quality cells 
+
+dim(combined_matrix) # 1044031      11
+dim(combined_matrix[combined_matrix$total_counts > 200,]) #10912    11
+dim(combined_matrix[combined_matrix$total_counts > 400,]) #9472   11
+summary(combined_matrix$total_counts)
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+      0       0       1      47       2   41712 
+
+cm <- combined_matrix
+cm <_ cm[cm$total_counts >0,]
+cm2 <- cm[cm$total_counts > 400,]
+pdf("total_counts_distribution_combined_matrix_total_count>400 .pdf")
+ggplot(cm2, aes(x = log(total_counts))) + 
+  geom_density(color = "#B19CD9", fill = "#B19CD9") +  
+  labs(x = "Log(Total counts)", y = "Density", title = "Distribution of Log(Total Counts)")
+dev.off()
+
+pdf("histogram_total_counts.pdf")
+hp <- ggplot() +
+  geom_histogram(data = cm, aes(x = log(total_counts)), color = "#B19CD9", fill = "#B19CD9", alpha = 0.5, bins=50) +
+  geom_histogram(data = cm2, aes(x = log(total_counts)), color = "red", fill = "red", alpha = 0.5, bins=50) +  
+  labs(x = "Log(Total counts)", y = "Density", title = "Distribution of Log(Total Counts)") +
+  theme_minimal()
+dev.off()
+
+pdf("zoomed_in_histogram_total_counts.pdf")
+zhp <- hp +
+  xlim(5, NA) +  # Zoom in to x values between 4 and 9
+  ylim(0, NA) +  # Keep the y-axis range unchanged
+  labs(title = "Zoomed-in Section")
+dev.off()
+
+pdf("histogram_total_counts+zoom-in-section_500.pdf")
+hp + annotation_custom(ggplotGrob(zhp), xmin = 5, xmax = Inf, ymin = 100000, ymax = 300000)
+dev.off()
+
+pdf("MappingRateDistribution_Human_CombinedMatrix_filter.pdf")
+ggplot(cm2, aes(x = h_counts_ratio, fill = original_species)) + 
+  geom_histogram(color = "#B19CD9", bins = 100) + 
+  labs(x = "Human Transcript Mapping Rate", y = "Number of Cells", title = "Distribution of Mapping Rate to Human Genome", fill="Original Species") +
+  theme(aspect.ratio = 1)
+dev.off()
+
+#chimp mapping rates in all cells 
+pdf("MappingRateDistribution_Chimp_CombinedMatrix_filter.pdf")
+ggplot(cm2, aes(x = ch_counts_ratio, fill = original_species)) + 
+  geom_histogram(color="#FFB347", bins = 100) + 
+  labs(x = "Chimpanzee Transcript Mapping Rate", y = "Number of Cells", title = "Distribution of Mapping Rate to Chimpanzee Genome", fill="Original Species") +
+  theme(aspect.ratio = 1)
+dev.off()
+
+pdf("MappingRateDistribution_Macaq_CombinedMatrix_filter.pdf")
+ggplot(cm2, aes(x = m_counts_ratio, fill = original_species)) + 
+  geom_histogram(color="#87CEEB", bins = 100) + 
+  labs(x = "Macaque Transcript Mapping Rate", y = "Number of Cells", title = "Distribution of Mapping Rate to Macaque Genome", fill="Original Species") +
+  theme(aspect.ratio = 1)
+dev.off()
+
+
+##############################################################################################################################################
+#mismatch befire filter 
+mispredictions <- which(combined_matrix$predicted_species != combined_matrix$original_species)
+length(mispredictions) #168495
+dim(combined_matrix) #1044031 10
+#% of cells that are mispredicted
+168495/1044031 = 0.1613889
+
+#mismatch after filter 
+mispredictions <- which(cm2$predicted_species != cm2$original_species)
+length(mispredictions) #1622
+dim(cm2) #9472
+#% of cells that are mispredicted
+1622/9472 = 0.1712416
+
+m <- cm2[cm2_m$m_counts_ratio > 0.1,]
+
+mispredictions <- which(cm2_h$predicted_species != cm2_h$original_species) #1617/5712 = 0.2830882
+mispredictions <- which(cm2_ch$predicted_species != cm2_ch$original_species) #5/3760 = 0.001329787
+mispredictions <- which(cm2_m$predicted_species != cm2_m$original_species)
+
+cm2$prediction_based_on_m <- ifelse(cm2$m_counts_ratio > 0.1, "m", "else")
+cm2$prediction_based_on_ch <- ifelse(cm2$ch_counts_ratio > 0.5, "ch", "else")
+cm2$prediction_based_on_h <- ifelse(cm2$h_counts_ratio > 0.8, "h", "else")
+
+sum(rowSums(cm2[, c("prediction_based_on_m", "prediction_based_on_h", "prediction_based_on_ch")] == "else") < 2) 
+#this is equla to 0 so there werenet any rows that had two species associated to them. 
+
+sum(rowSums(cm2[, c("prediction_based_on_m", "prediction_based_on_h", "prediction_based_on_ch")] == "else") == 3)
+#this is equla to 0 so there were no rows that had no species assigned to them. 
+
+#final number of cells (after the filter) was about 10 000 out of 100 000. 
+write.csv(cm2, "combined_matrix_after_filter_400.csv")
+
+##############################################################################################################################################
+cm2 <- cm[cm$total_counts >500,] #dim: 9081   11
+#500 filter justification 
+#<https://hbctraining.github.io/scRNA-seq/lessons/04_SC_quality_control.html>
+#"The UMI counts per cell should generally be above 500, that is the low end of what we expect. 
+#If UMI counts are between 500-1000 counts, it is usable but the cells probably should have been sequenced more deeply."
+
+mispredictions <- which(cm2$predicted_species != cm2$original_species)
+length(mispredictions) #1553
+dim(cm2) #9081
+1553/9081=0.1710164
+
+#the rest of the metrics are the same. 
+
+dim(cm2[cm2$h_counts_ratio > 0.8,]) #3911
+dim(cm2[cm2$ch_counts_ratio > 0.5,]) #3617 
+dim(cm2[cm2$m_counts_ratio > 0.1,]) #1553
+
+pdf("histogram_counts_filter_500.pdf")
+ggplot() +
+  geom_histogram(data = cm2, aes(x = log(total_counts)), color = "red", fill = "red", alpha = 0.5, bins=50) +  
+  labs(x = "Log(Total counts)", y = "Density", title = "Distribution of Log(Total Counts)") +
+  theme_minimal()
+dev.off()
