@@ -343,73 +343,77 @@ dev.off()
 ##############################################################################################################################################
 cm <- read.csv("combined_matrix.csv")
 cm2 <- read.csv("combined_matrix_after_filter_400.csv")
-
-pdf("MappingRateDistribution_Human_CombinedMatrix_no_color.pdf")
-ggplot(cm, aes(x = h_counts_ratio)) + 
-  geom_histogram(color = "#B19CD9", bins = 70) +
-  labs(x = "Human Transcript Mapping Rate", y = "Number of Cells") +
-  theme(aspect.ratio = 1)
-dev.off()
-
-#chimp mapping rates in all cells 
-pdf("MappingRateDistribution_Chimp_CombinedMatrix_no_color.pdf")
-ggplot(cm, aes(x = ch_counts_ratio)) + 
-  geom_histogram(color="#FFB347", bins = 70) + 
-  labs(x = "Chimpanzee Transcript Mapping Rate", y = "Number of Cells") +
- theme(aspect.ratio = 1)
-dev.off()
-
-pdf("MappingRateDistribution_Macaq_CombinedMatrix_no_color.pdf")
-ggplot(cm, aes(x = m_counts_ratio)) + 
-  geom_histogram(color="#87CEEB", bins = 100) + 
-  labs(x = "Macaque Transcript Mapping Rate", y = "Number of Cells") + 
-theme(aspect.ratio = 1)
-dev.off()
-
 cm2 <- cm[cm$total_counts >500,]
+write.csv(cm2, "combined_matrix_after_filter_500.csv")
 
-pdf("MappingRateDistribution_Human_CombinedMatrix_no_color_filter.pdf")
-ggplot(cm2, aes(x = h_counts_ratio)) + 
-  geom_histogram(color = "#B19CD9", bins = 70) +
+
+pdf("a_MappingRateDistribution_Human_CombinedMatrix_no_color.pdf")
+ggplot(cm, aes(x = h_counts_ratio)) + 
+  geom_histogram(color = "#B19CD9", fill="#B19CD9", bins = 70) +
   labs(x = "Human Transcript Mapping Rate", y = "Number of Cells") +
   theme(aspect.ratio = 1)
 dev.off()
 
 #chimp mapping rates in all cells 
-pdf("MappingRateDistribution_Chimp_CombinedMatrix_no_color_filter.pdf")
-ggplot(cm2, aes(x = ch_counts_ratio)) + 
-  geom_histogram(color="#FFB347", bins = 70) + 
+pdf("a_MappingRateDistribution_Chimp_CombinedMatrix_no_color.pdf")
+ggplot(cm, aes(x = ch_counts_ratio)) + 
+  geom_histogram(color="#FFB347", fill="#FFB347", bins = 70) + 
   labs(x = "Chimpanzee Transcript Mapping Rate", y = "Number of Cells") +
  theme(aspect.ratio = 1)
 dev.off()
 
-pdf("MappingRateDistribution_Macaq_CombinedMatrix_no_color_filter.pdf")
-ggplot(cm2, aes(x = m_counts_ratio)) + 
-  geom_histogram(color="#87CEEB", bins = 100) + 
+pdf("a_MappingRateDistribution_Macaq_CombinedMatrix_no_color.pdf")
+ggplot(cm, aes(x = m_counts_ratio)) + 
+  geom_histogram(color="#87CEEB",fill="#87CEEB", bins = 70) + 
   labs(x = "Macaque Transcript Mapping Rate", y = "Number of Cells") + 
 theme(aspect.ratio = 1)
 dev.off()
 
 
 
-pdf("MappingRateDistribution_Human_CombinedMatrix_colour_filter.pdf")
-ggplot(cm2, aes(x = h_counts_ratio, fill = original_species)) + 
-  geom_histogram(color = "#B19CD9", bins = 100) + 
+
+pdf("a_MappingRateDistribution_Human_CombinedMatrix_no_color_filter.pdf")
+ggplot(cm2, aes(x = h_counts_ratio)) + 
+  geom_histogram(color = "#B19CD9", fill="#B19CD9", bins = 70) +
+  labs(x = "Human Transcript Mapping Rate", y = "Number of Cells") +
+  theme(aspect.ratio = 1)
+dev.off()
+
+#chimp mapping rates in all cells 
+pdf("a_MappingRateDistribution_Chimp_CombinedMatrix_no_color_filter.pdf")
+ggplot(cm2, aes(x = ch_counts_ratio)) + 
+  geom_histogram(color="#FFB347", fill="#FFB347", bins = 70) + 
+  labs(x = "Chimpanzee Transcript Mapping Rate", y = "Number of Cells") +
+ theme(aspect.ratio = 1)
+dev.off()
+
+pdf("a_MappingRateDistribution_Macaq_CombinedMatrix_no_color_filter.pdf")
+ggplot(cm2, aes(x = m_counts_ratio)) + 
+  geom_histogram(color="#87CEEB",fill="#87CEEB", bins = 70) + 
+  labs(x = "Macaque Transcript Mapping Rate", y = "Number of Cells") + 
+theme(aspect.ratio = 1)
+dev.off()
+
+
+
+pdf("a_MappingRateDistribution_Human_CombinedMatrix_colour_filter.pdf")
+ggplot(cm2, aes(x = h_counts_ratio, color=original_species, fill = original_species)) + 
+  geom_histogram(bins = 70) + 
   labs(x = "Human Transcript Mapping Rate", y = "Number of Cells", fill="Original Species") +
   theme(aspect.ratio = 1)
 dev.off()
 
 #chimp mapping rates in all cells 
-pdf("MappingRateDistribution_Chimp_CombinedMatrix_colour_filter.pdf")
-ggplot(cm2, aes(x = ch_counts_ratio, fill = original_species)) + 
-  geom_histogram(color="#FFB347", bins = 100) + 
+pdf("a_MappingRateDistribution_Chimp_CombinedMatrix_colour_filter.pdf")
+ggplot(cm2, aes(x = ch_counts_ratio, color=original_species, fill = original_species)) + 
+  geom_histogram(bins = 70) + 
   labs(x = "Chimpanzee Transcript Mapping Rate", y = "Number of Cells", fill="Original Species") +
   theme(aspect.ratio = 1)
 dev.off()
 
-pdf("MappingRateDistribution_Macaq_CombinedMatrix_colour_filter.pdf")
-ggplot(cm2, aes(x = m_counts_ratio, fill = original_species)) + 
-  geom_histogram(color="#87CEEB", bins = 100) + 
+pdf("a_MappingRateDistribution_Macaq_CombinedMatrix_colour_filter.pdf")
+ggplot(cm2, aes(x = m_counts_ratio, color=original_species, fill = original_species)) + 
+  geom_histogram( bins = 70) + 
   labs(x = "Macaque Transcript Mapping Rate", y = "Number of Cells",fill="Original Species") +
   theme(aspect.ratio = 1)
 dev.off()
